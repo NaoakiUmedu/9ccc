@@ -1,6 +1,40 @@
-/* Step 2 Calculate */
+/* Step 3 Tokenizer */
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
+#include <stdarg.h>
+#include <stdbool.h>
+#include <string.h>
+
+/* Utility Types Declear */
+typedef enum
+{
+	TK_RESERVED,	// signal
+	TK_NUM,			// number
+	TK_EOF,			// end of input
+} TokenKind;
+
+typedef struct Token Token;
+
+struct Token
+{
+	TokenKind kind;
+	Token *next;
+	int val;		// number
+	char *str;		// string
+};
+
+/* Valiables Declear */
+Token *token;	// now seening token
+
+void error(char *fmt, ...)
+{
+	va_list ap;
+	va_start(ap, fmt);
+	vfprintf(stderr, fmt, ap);
+	fprintf(stderr, "\n");
+	exit(1);
+}
 
 int main(int argc, char **argv)
 {
