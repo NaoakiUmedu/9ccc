@@ -9,9 +9,6 @@
 
 #include "9ccc.h"
 
-/*** グローバル変数 ***/
-Token *token;	// now seening token
-
 /* エラー報告用関数 */
 void error(char *fmt, ...)
 {
@@ -22,10 +19,25 @@ void error(char *fmt, ...)
 	exit(1);
 }
 
+/* エラー報告用関数2 */
+void error_at(char *loc, char *fmt, ...)
+{
+	va_list ap;
+	va_start(ap, fmt);
+
+	int pos = loc - user_input;
+	fprintf(stderr, "%s\n", user_input);
+	fprintf(stderr, "%*s", pos, " ");
+	fprintf(stderr, "^ ");
+	vfprintf(stderr, fmt, ap);
+	fprintf(stderr, "\n");
+	exit(1);
+}
+
 /* トークンを読み進める(記号->bool) */
 bool consume(char op)
 {
-	if((token->kind != TK_RESERVED) || (token->str[0] != op))
+	if ((token->kind != TK_RESERVED) || (token->str[0] != op))
 	{
 		return false;
 	}
@@ -36,9 +48,9 @@ bool consume(char op)
 /* トークンを読み進める(記号->エラーメッセージ) */
 void expect(char op)
 {
-	if((token->kind != TK_RESERVED) || (token->str[0] != op))
+	if ((token->kind != TK_RESERVED) || (token->str[0] != op))
 	{
-		error("'%c'ではありません", op);
+		error_at(token->str, "'%c'ではありません", op);
 	}
 	token = token->next;
 }
@@ -46,9 +58,9 @@ void expect(char op)
 /* トークンを読み進める(数値) */
 int expect_number()
 {
-	if(token->kind != TK_NUM)
+	if (token->kind != TK_NUM)
 	{
-		error("数ではありません");
+		error_at(token->str, "数ではありません");
 	}
 	int val = token->val;
 	token = token->next;
@@ -72,23 +84,24 @@ Token *new_token(TokenKind kind, Token *cur, char *str)
 }
 
 /* 入力文字列pをトークナイズしてそれを返す */
-Token *tokenize(char *p)
+Token *tokenize()
 {
+	char *p = user_input;
 	Token head;
 	head.next = NULL;
 	Token *cur = &head;
-	
-	while(*p)
+
+	while (*p)
 	{
 		// 空白文字をスキップする
-		if(isspace(*p))
+		if (isspace(*p))
 		{
 			p++;
 			continue;
 		}
 
 		// 記号である場合
-		if((*p == '+') || (*p == '-'))
+		if ((*p == '+') || (*p == '-'))
 		{
 			cur = new_token(TK_RESERVED, cur, p);
 			p++;
@@ -96,14 +109,14 @@ Token *tokenize(char *p)
 		}
 
 		// 数値である場合
-		if(isdigit(*p))
+		if (isdigit(*p))
 		{
 			cur = new_token(TK_NUM, cur, p);
 			cur->val = strtol(p, &p, 10);
 			continue;
 		}
 
-		error("トークナイズできません...");
+		error_at(p, "数字ではありません");
 	}
 
 	new_token(TK_EOF, cur, p);
@@ -113,14 +126,15 @@ Token *tokenize(char *p)
 /*** MAIN PROGRAM ***/
 int main(int argc, char **argv)
 {
-	if(argc != 2)
+	if (argc != 2)
 	{
 		error("引数の個数が正しくありません");
 		return 1;
 	}
 
 	// トークナイズする
-	token = tokenize(argv[1]);
+	user_input = argv[1];
+	token = tokenize();
 
 	// アセンブリ前半部分を出力
 	printf(".intel_syntax noprefix\n");
@@ -133,9 +147,9 @@ int main(int argc, char **argv)
 
 	// '+ <数>' あるいは '- <数>'というトークンの並びを消費しつつ
 	// アセンブリを出力
-	while(!at_eof())
+	while (!at_eof())
 	{
-		if(consume('+'))
+		if (consume('+'))
 		{
 			printf("	add rax, %d\n", expect_number());
 			continue;
