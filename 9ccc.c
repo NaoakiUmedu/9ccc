@@ -1,10 +1,10 @@
 /* Step 3 Tokenizer */
 /* メモリ管理ポリシー:短命なプログラムなのでfreeしなくてもよい */
-#include <stdio.h>
-#include <stdlib.h>
 #include <ctype.h>
 #include <stdarg.h>
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "9ccc.h"
@@ -68,10 +68,7 @@ int expect_number()
 }
 
 /* EOFかどうかチェックする */
-bool at_eof()
-{
-	return (token->kind == TK_EOF);
-}
+bool at_eof() { return (token->kind == TK_EOF); }
 
 /* 新しいトークンを作成してcurにつなげる */
 Token *new_token(TokenKind kind, Token *cur, char *str)
